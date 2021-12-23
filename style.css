@@ -1,17 +1,55 @@
 :root {
     height: 100%;
+    --ON: initial;
+    --OFF: ;
+    --light: var(--OFF);
+    --dark: var(--ON);
+    /* Colors */
+    --text-color: var(--light, black) var(--dark, #efefef);
+    --bg-color: var(--light, white) var(--dark, #10141b);
+    --content-bg-color: var(--light, honeydew) var(--dark, #1a1f28);
+    /* Grid colors */
+    --blank-cell-color: var(--light, white) var(--dark, #454f5e);
+    --dark-cell-color: var(--light, black) var(--dark, black);
+    --selected-clue-color: var(--light, #94c8ff) var(--dark, #7e3556);
+    --selected-cell-color: var(--light, #1f8fff) var(--dark, #aa0951);
+    /* Border colors */
+    --main-border-color: var(--light, black) var(--dark, lightgray);
+    --button-border-color: var(--light, black) var(--dark, darkgray);
+    /* Other colors */
+    --button-color: var(--light, white) var(--dark, #080a0c);
+    --green-color: var(--light, #007814) var(--dark, #339e45);
+    --red-color: var(--light, #c80000) var(--dark, #c02121);
+    --selection-color: var(--light, #5ea8f1) var(--dark, #2175c9);
+    --dropzone-color: var(--light, rgba(212, 230, 212, 0.85)) var(--dark, rgb(0, 0, 0, 0.8));
+    --rentable-shadow-color: var(--light, rgba(104, 94, 4, 0.5)) var(--dark, rgba(255, 250, 205, 0.2));
+    --notif-bg-color: var(--light, rgba(212, 230, 212, 0.95)) var(--dark, rgb(0, 0, 0, 0.9));
+    --link-color: var(--light, #0660b9) var(--dark, #1f8fff);
+    /* Progress bar colors */
+    --pb-bg-color: var(--light, black) var(--dark, rgba(0, 0, 0, 0.4));
+    --pb-border-color: var(--light, black) var(--dark, rgb(239, 239, 239));
 }
 
 #container {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    margin: 0;
+	width: 100%;
+	height: 100%;
+	cursor: default;
+	margin: 0;
+	display: flex;
+	font-family: "Milliard Medium", Arial, Helvetica, sans-serif;
+    font-size: 14pt;
+	line-height: 1.4;
+	overflow: hidden;
+    color: var(--text-color);
+}
+
+::selection {
+	background-color: transparent;
 }
 
 /* File import */
 
-div.dropzone {
+.dropzone {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -19,33 +57,139 @@ div.dropzone {
 	width: 100%;
 	height: 100%;
 	display: flex;
+    flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	font-size: calc(var(--ui-size) * 2);
+	font-size: 2em;
+    background-color: var(--dropzone-color);
 	/* Animation */
 	visibility: hidden;
 	opacity: 0;
 	transition: visibility 175ms, opacity 175ms;
 }
 
-div.dropzone.active {
+.dropzone.active {
 	visibility: visible;
 	opacity: 100%;
 }
 
+.dropzone.loading .placeholder {
+    display: none;
+}
+
+.dropzone .progressmessage {
+    display: none;
+}
+
+.dropzone.loading .progressmessage {
+    display: block;
+}
+
+.dropzone .progressbar {
+    display: none;
+    box-sizing: border-box;
+    width: 50%;
+    height: 40px;
+    background-color: var(--pb-bg-color);
+    border: var(--pb-border-color) solid 6px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.dropzone.loading .progressbar {
+    display: block;
+}
+
+.dropzone .progressbar .progressmarker {
+    height: 100%;
+    background-color: var(--green-color);
+}
+
 /* Menu bar on left */
 
-div#menu {
-    flex: 1 1 200px;
-    background-color: rgb(181, 181, 197);
+#menu {
+    display: flex;
+    flex-direction: column;
+    font-size: 14pt;
+    flex: 0 0 16%;
+    overflow-y: scroll;
+    background-color: var(--bg-color);
+    scrollbar-width: 0;
+}
+
+#menu::-webkit-scrollbar, #info::-webkit-scrollbar {
+    display: none;
+}
+
+.menu-item {
+	margin: 6% 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+#menu .title, #info .title {
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+    text-shadow:
+        var(--selected-cell-color) 3px 4px 6px,
+        var(--selected-cell-color) 3px -4px 6px,
+        var(--selected-cell-color) -3px 4px 6px,
+        var(--selected-cell-color) -3px -4px 6px
+    ;
+}
+
+#menu .header, #info .header {
+	font-size: 1.5em;
+	text-align: center;
+	margin: 0 auto;
+    border-bottom: var(--main-border-color) thin solid;
+}
+
+/* Album list */
+
+.item-list {
+    text-align: center;
+}
+
+.item-list .placeholder {
+    display: none;
+    opacity: 60%;
+}
+
+.item-list .placeholder:last-child {
+    display: block;
+}
+
+.item-list .entry {
+    padding: 6pt 0;
+    cursor: pointer;
+}
+
+.item-list .entry.selected {
+    color: var(--green-color);
+    text-shadow: var(--green-color) 0 0 4px;
+}
+
+.item-list .entry:hover {
+    background-color: var(--dropzone-color);
+}
+
+.item-list .entry .album-name {
+    font-size: 1.2em;
+}
+
+.item-list .entry .album-artist {
+    opacity: 80%;
 }
 
 /* Content */
 
-div#content {
+#content {
     position: relative;
-    flex: 10 1;
-    background-color: rgb(73, 29, 15);
+    flex: 1 1;
+    background-color: var(--content-bg-color);
     border-left: inset 8px;
     border-right: inset 8px;
 }
@@ -56,12 +200,56 @@ div#content {
     top: 50%;
     width: 800px;
     height: 800px;
+    border-radius: 50%;
+    cursor: pointer;
+    transform: translate(-50%, -50%) rotateX(-10deg);
+    overflow: hidden;
+}
+
+#content #record .record-image {
+    width: 100%;
+    height: 100%;
+}
+
+#content #record .album-cover {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 25%;
+    height: 25%;
+    border-radius: 50%;
     transform: translate(-50%, -50%);
+}
+
+#content #record.has-cover .album-cover {
+    display: block;
+}
+
+#content #record .record-hole {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 3.75%;
+    height: 3.75%;
+    border: rgb(128, 0, 0) 3px solid;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--content-bg-color);
 }
 
 /* Info bar on right */
 
-div#info {
-    flex: 1 1 250px;
-    background-color: rgb(181, 181, 197);
+#info {
+    display: flex;
+    flex-direction: column;
+    font-size: 14pt;
+    flex: 0 0 20%;
+    overflow-y: scroll;
+    background-color: var(--bg-color);
+    scrollbar-width: 0;
+}
+
+#info .title {
+    visibility: hidden;
 }

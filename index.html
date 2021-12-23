@@ -7,17 +7,33 @@
     </head>
     <body id="container">
         <div class="dropzone">
-            Upload File...
+            <div class="placeholder">Upload File...</div>
+            <div class="progressmessage"></div>
+            <div class="progressbar">
+                <div class="progressmarker"></div>
+            </div>
         </div>
         <div id="menu">
-
+            <div class="menu-item title">VINYL</div>
+            <div class="menu-item header">Albums</div>
+            <div class="menu-item item-list">
+                <div class="placeholder">Upload a music file to begin...</div>
+            </div>
         </div>
         <div id="content">
-            <img id="record" src="res/record.svg" />
+            <div id="record">
+                <img class="record-image" src="res/record.svg" />
+                <img class="album-cover" src="" alt="" />
+                <div class="record-hole"></div>
+            </div>
             <audio id="player"></audio>
         </div>
         <div id="info">
-
+            <div class="menu-item title">VINYL</div>
+            <div class="menu-item header">Tracks</div>
+            <div class="menu-item item-list">
+                <div class="placeholder">Select an album to begin...</div>
+            </div>
         </div>
         <script type="text/javascript" src="script.js"></script>
     </body>
