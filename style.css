@@ -41,6 +41,8 @@
 	line-height: 1.4;
 	overflow: hidden;
     color: var(--text-color);
+    /* Animation */
+    --text-glow-blur: 4px;
 }
 
 ::selection {
@@ -147,7 +149,7 @@
     border-bottom: var(--main-border-color) thin solid;
 }
 
-/* Album list */
+/* Album/Track list */
 
 .item-list {
     text-align: center;
@@ -163,18 +165,24 @@
 }
 
 .item-list .entry {
-    padding: 6pt 0;
+    padding: 6pt 2px;
     cursor: pointer;
 }
 
 .item-list .entry.selected {
+    color: var(--selection-color);
+}
+
+.item-list .entry.playing, .item-list .entry.selected.playing {
     color: var(--green-color);
-    text-shadow: var(--green-color) 0 0 4px;
+    text-shadow: var(--green-color) 0 0 var(--text-glow-blur);
 }
 
 .item-list .entry:hover {
     background-color: var(--dropzone-color);
 }
+
+/* Album list */
 
 .item-list .entry .album-name {
     font-size: 1.2em;
@@ -202,8 +210,12 @@
     height: 800px;
     border-radius: 50%;
     cursor: pointer;
-    transform: translate(-50%, -50%) rotateX(-10deg);
+    transform: translate(-50%, -50%);
     overflow: hidden;
+}
+
+#content #record.swap {
+    top: -50%;
 }
 
 #content #record .record-image {
@@ -216,8 +228,8 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 25%;
-    height: 25%;
+    width: 31%;
+    height: 31%;
     border-radius: 50%;
     transform: translate(-50%, -50%);
 }
@@ -230,12 +242,16 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 3.75%;
-    height: 3.75%;
-    border: rgb(128, 0, 0) 3px solid;
+    width: 4.2%;
+    height: 4.2%;
+    border: none;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     background-color: var(--content-bg-color);
+}
+
+#content #record.has-cover .record-hole {
+    border: rgb(128, 0, 0) 2px solid;
 }
 
 /* Info bar on right */
@@ -252,4 +268,14 @@
 
 #info .title {
     visibility: hidden;
+}
+
+/* Track list */
+
+.item-list .entry .track-name {
+    font-size: 1.1em;
+}
+
+.item-list .entry .track-duration {
+    opacity: 70%;
 }
