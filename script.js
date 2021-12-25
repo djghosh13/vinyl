@@ -98,153 +98,15 @@ class AudioLoader {
     }
 }
 
-class AudioAnimator {
-    constructor(target) {
-        this.target = target;
-        this.playing = false;
-        this.queued = null;
-        this.frame = 0;
-        this.lastTimestamp = 0;
-        this.rotation = 0;
-        this.targetUrl = null;
-        this.glowFrame = 0;
-        // Modes
-        this.ANIMATE_NONE = 0;
-        this.ANIMATE_IDLE = 1;
-        this.ANIMATE_SPIN = 2;
-        this.ANIMATE_SWAP_END = 3;
-        this.ANIMATE_SWAP_START = 4;
-        this.animating = this.ANIMATE_NONE;
-        // Settings
-        this.DURATION_IDLE = 400;
-        this.DURATION_SWAP = 600;
-        this.SPEED_PLAYING = (100/3) / 60; // 33 1/3 RPM
-        this.SPEED_WINDING = 45 / 60;
-    }
-
-    get isPlaying() { return this.playing || this.queued != null; }
-
-    signalStop() {
-        this.playing = false;
-        this.queued = null;
-    }
-
-    signalStart(callback) {
-        if (!this.playing) {
-            this.queued = callback;
-        }
-    }
-
-    signalRecordSpin(seek) {
-        if (this.animating < this.ANIMATE_SPIN) {
-            this.animating = this.ANIMATE_SPIN;
-        }
-        if (this.animating == this.ANIMATE_SPIN) {
-            this.frame = ((this.rotation - seek % (1 / this.SPEED_PLAYING) + 1) % 1) / this.SPEED_WINDING * 1000;
-        }
-    }
-
-    signalRecordSwap(url) {
-        if (this.animating == this.ANIMATE_SWAP_END) {
-            this.frame = this.DURATION_SWAP - this.frame;
-        } else if (this.animating < this.ANIMATE_SWAP_END) {
-            this.frame = this.DURATION_SWAP;
-        }
-        this.targetUrl = url;
-        this.animating = this.ANIMATE_SWAP_START;
-    }
-
-    signalSetCover(url) {
-        this.url = url;
-    }
-
-    animate(time) {
-        switch (this.animating) {
-            // Move record up out of sight
-            case this.ANIMATE_SWAP_START:
-                this.target.style.top = `${-50 + (100 / this.DURATION_SWAP) * this.frame}%`;
-                this.frame -= time - this.lastTimestamp;
-                if (this.frame < 0) {
-                    this.animating = this.ANIMATE_SWAP_END;
-                    this.frame = this.DURATION_SWAP;
-                    if (this.targetUrl == null) {
-                        this.target.classList.remove("has-cover");
-                        this.target.querySelector(".album-cover").src = "";
-                    } else {
-                        this.target.querySelector(".album-cover").src = this.targetUrl;
-                        this.target.classList.add("has-cover");
-                    }
-                }
-                break;
-            // Move record down into frame
-            case this.ANIMATE_SWAP_END:
-                this.target.style.top = `${50 - (100 / this.DURATION_SWAP) * this.frame}%`;
-                this.frame -= time - this.lastTimestamp;
-                if (this.frame < 0) {
-                    this.target.style.top = "50%";
-                    this.animating = this.ANIMATE_IDLE;
-                    this.frame = this.DURATION_IDLE;
-                }
-                break;
-            // Spin record to switch tracks
-            case this.ANIMATE_SPIN:
-                this.rotation = (this.rotation - this.SPEED_WINDING / 1000 * (time - this.lastTimestamp)) % 1;
-                this.target.style.transform = `translate(-50%, -50%) rotateZ(${this.rotation}turn)`;
-                this.frame -= time - this.lastTimestamp;
-                if (this.frame < 0) {
-                    this.animating = this.ANIMATE_IDLE;
-                    this.frame = this.DURATION_IDLE;
-                }
-                break;
-            // Delay before resuming playback
-            case this.ANIMATE_IDLE:
-                this.frame -= time - this.lastTimestamp;
-                if (this.frame < 0) {
-                    this.animating = this.ANIMATE_NONE;
-                    this.frame = 0;
-                }
-                break;
-            // Spin while track is playing
-            default:
-                if (this.playing) {
-                    this.rotation = (this.rotation + this.SPEED_PLAYING / 1000 * (time - this.lastTimestamp)) % 1; // 33 1/3 RPM
-                    this.target.style.transform = `translate(-50%, -50%) rotateZ(${this.rotation}turn)`;
-                }
-        }
-        // Start playback when animations are completed
-        if (this.queued != null && this.animating == this.ANIMATE_NONE) {
-            this.playing = true;
-            window.setTimeout(this.queued, 0);
-            this.queued = null;
-        }
-        // Next frame
-        if (this.glowFrame > 100 || this.playing) {
-            this.glowFrame = (this.glowFrame + (time - this.lastTimestamp)) % 1500;
-            document.querySelector("#container").style.setProperty("--text-glow-blur", `${4.5 - 2*Math.cos(2 * Math.PI * this.glowFrame / 1500)}px`);
-        }
-        this.lastTimestamp = time;
-        window.requestAnimationFrame(this.animate.bind(this));
-    }
-
-    resize() {
-        let size = 0.8 * Math.min(
-            this.target.parentElement.offsetWidth,
-            this.target.parentElement.offsetHeight,
-            1000
-        );
-        this.target.style.width = `${size}px`;
-        this.target.style.height = `${size}px`;
-    }
-}
-
 class AudioPlayer {
-    constructor(player, albumList, trackList, dropZone, audioController) {
+    constructor(player, albumList, trackList, dropZone, recordElement, needleElement) {
         // HTML elements
         this.player = player;
         this.albumList = albumList;
         this.trackList = trackList;
         this.dropZone = dropZone;
-        this.audioController = audioController;
+        this.recordElement = recordElement;
+        this.needleElement = needleElement;
         // Data
         this.lastDropTarget = null;
         this.music = null;
@@ -253,7 +115,14 @@ class AudioPlayer {
         this.playingTrack = -1;
         // State
         this.loader = new AudioLoader(dropZone);
-        this.animator = new AudioAnimator(this.audioController);
+        this.controller = new AudioAnimationController(
+            recordElement,
+            needleElement,
+            player,
+            () => this.music
+        );
+        this.animator = new AudioAnimator(this.controller);
+        this.animationFrame = null;
         // Init
         this.initFileUpload();
         this.initAudioControl();
@@ -283,38 +152,42 @@ class AudioPlayer {
                         this.dropZone.classList.remove("active");
                         this.dropZone.classList.remove("loading");
                     });
+                } else {
+                    this.dropZone.classList.remove("active");
+                    this.dropZone.classList.remove("loading");
+                    break;
                 }
             }
         });
     }
 
     initAudioControl() {
-        this.audioController.addEventListener("click", event => {
+        this.recordElement.addEventListener("click", event => {
             this.toggleAudio();
         });
-        this.player.addEventListener("pause", event => {
-            this.pauseAudio();
+        this.needleElement.addEventListener("click", event => {
+            this.toggleAudio();
         });
-        this.player.addEventListener("play", event => {
-            this.playAudio();
-        });
+        // TODO: Fix
+        // this.player.addEventListener("pause", event => {
+        //     this.pauseAudio();
+        // });
+        // this.player.addEventListener("play", event => {
+        //     this.playAudio();
+        // });
         this.player.addEventListener("ended", event => {
-            this.pauseAudio();
-            if ("autoplay") {
-                if (this.selectedAlbum == this.playingAlbum) {
-                    this.selectTrack((this.playingTrack + 1) % this.music[this.selectedAlbum]["tracks"].length);
-                } else {
-                    this.playingTrack = (this.playingTrack + 1) % this.music[this.selectedAlbum]["tracks"].length;
-                    this.player.src = this.music[this.playingAlbum]["tracks"][this.playingTrack]["url"];
-                    this.playAudio(true);
-                }
+            if (this.selectedAlbum == this.playingAlbum) {
+                this.selectTrack((this.playingTrack + 1) % this.music[this.selectedAlbum]["tracks"].length);
+            } else {
+                this.playingTrack = (this.playingTrack + 1) % this.music[this.selectedAlbum]["tracks"].length;
+                this.playAudio();
             }
         });
-        this.animator.resize();
+        this.controller.resize();
         window.addEventListener("resize", event => {
-            this.animator.resize();
+            this.controller.resize();
         });
-        window.requestAnimationFrame(this.animator.animate.bind(this.animator));
+        window.requestAnimationFrame(this.animate.bind(this));
     }
 
     async load(file) {
@@ -401,10 +274,8 @@ class AudioPlayer {
             // Toggle play on currently playing track
             this.toggleAudio();
         } else {
-            this.pauseAudio();
             if (this.selectedAlbum == this.playingAlbum) {
                 // Switch tracks
-                this.animator.signalRecordSpin(this.music[this.playingAlbum]["tracks"][index]["seek"]);
                 let entries = this.trackList.querySelectorAll(".entry");
                 for (let entry of entries) {
                     entry.classList.remove("selected");
@@ -416,7 +287,6 @@ class AudioPlayer {
                 }
             } else {
                 // Switch albums
-                this.animator.signalRecordSwap(this.music[this.selectedAlbum]["image"]);
                 let entries = this.trackList.querySelectorAll(".entry");
                 if (index != -1) {
                     entries[index].classList.add("selected");
@@ -431,9 +301,6 @@ class AudioPlayer {
             }
             this.playingAlbum = this.selectedAlbum;
             this.playingTrack = index;
-            if (index != -1) {
-                this.player.src = this.music[this.playingAlbum]["tracks"][this.playingTrack]["url"];
-            }
             this.playAudio();
         }
     }
@@ -441,20 +308,30 @@ class AudioPlayer {
     // Control audio
 
     pauseAudio() {
-        this.player.pause();
-        this.animator.signalStop();
+        this.animator.stopAudio();
     }
 
     playAudio() {
-        this.animator.signalStart(() => this.player.play());
+        this.animator.setTarget(this.playingAlbum, this.playingTrack, true);
     }
 
     toggleAudio() {
-        if (this.animator.isPlaying || this.playingTrack == -1) {
+        if (this.animator.play || this.playingTrack == -1) {
             this.pauseAudio();
         } else {
             this.playAudio();
         }
+    }
+
+    // Animation
+
+    animate(time) {
+        if (this.animationFrame == null) {
+            this.animationFrame = time;
+        }
+        this.animator.update(time - this.animationFrame);
+        this.animationFrame = time;
+        window.requestAnimationFrame(this.animate.bind(this));
     }
 }
 
@@ -463,5 +340,6 @@ var vinyl = new AudioPlayer(
     document.querySelector("#menu .item-list"),
     document.querySelector("#info .item-list"),
     document.querySelector(".dropzone"),
-    document.querySelector("#record")
+    document.querySelector("#record"),
+    document.querySelector("#record-needle")
 );

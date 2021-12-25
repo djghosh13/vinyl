@@ -42,7 +42,7 @@
 	overflow: hidden;
     color: var(--text-color);
     /* Animation */
-    --text-glow-blur: 4px;
+    --text-glow-blur: 2px;
 }
 
 ::selection {
@@ -252,6 +252,15 @@
 
 #content #record.has-cover .record-hole {
     border: rgb(128, 0, 0) 2px solid;
+}
+
+#content #record-needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    cursor: pointer;
+    transform-origin: center 7.12%;
+    transform: translate(-50%, -7.12%);
 }
 
 /* Info bar on right */
