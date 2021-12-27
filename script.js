@@ -168,6 +168,11 @@ class AudioPlayer {
         this.needleElement.addEventListener("click", event => {
             this.toggleAudio();
         });
+        document.addEventListener("keypress", event => {
+            if (event.key == " ") {
+                this.toggleAudio();
+            }
+        });
         // TODO: Fix
         // this.player.addEventListener("pause", event => {
         //     this.pauseAudio();
@@ -191,6 +196,7 @@ class AudioPlayer {
     }
 
     async load(file) {
+        this.animator.reset();
         // Load metadata
         let {zip, albums} = await this.loader.loadMetadata(file);
         // Link audio files
@@ -234,7 +240,7 @@ class AudioPlayer {
             entry.remove();
         }
         if (this.music == null || this.selectedAlbum == -1) return;
-        const formatTime = time => `${Math.floor(time / 60)}:${time < 9.5 ? "0" : ""}${Math.round(time % 60)}`;
+        const formatTime = time => `${Math.floor(time / 60)}:${time % 60 < 9.5 ? "0" : ""}${Math.round(time % 60)}`;
         for (let track of this.music[this.selectedAlbum]["tracks"]) {
             this.trackList.innerHTML += `
             <div class="entry">

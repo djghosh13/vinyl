@@ -4,13 +4,13 @@ const AnimationSettings = {
     "RECORD_TURN_SPEED": (100 / 3) / (60 * 1000),
     "RECORD_WIND_SPEED": 45 / (60 * 1000),
     "RECORD_MOVE_DURATION": 600,
-    "TEXT_GLOW_PERIOD": 1200,
+    "TEXT_GLOW_PERIOD": 1400,
     // Animation settings
     "NEEDLE_MIN_ANGLE": 11,
     "NEEDLE_MAX_ANGLE": 32,
     "RECORD_HEIGHT": 120,
     "TEXT_MIN_GLOW": 2,
-    "TEXT_MAX_GLOW": 8
+    "TEXT_MAX_GLOW": 7
 };
 
 class AudioAnimator {
@@ -27,6 +27,13 @@ class AudioAnimator {
         // Audio playback
         this.controller = controller;
         this.play = false;
+    }
+
+    reset() {
+        this.targetAlbum = -1;
+        this.targetTrack = -1;
+        this.play = false;
+        this.controller.pauseAudio();
     }
 
     stopAudio() {
@@ -127,10 +134,12 @@ class AudioAnimator {
     }
 
     finishAlbumChange() {
-        this.currentAlbum = this.targetAlbum;
-        this.controller.setAlbumCover(this.currentAlbum);
-        this.recordRotation = 0;
-        this.controller.setRecordRotation(this.recordRotation);
+        if (this.targetAlbum != -1) {
+            this.currentAlbum = this.targetAlbum;
+            this.controller.setAlbumCover(this.currentAlbum);
+            this.recordRotation = 0;
+            this.controller.setRecordRotation(this.recordRotation);
+        }
     }
 
     finishTrackChange() {
@@ -151,10 +160,10 @@ class AudioAnimationController {
         this.recordElement = recordElement;
         this.needleElement = needleElement;
         this.audioElement = audioElement;
-        // Sfx
+        // SFX
         this.recordRunningSound = new Audio("res/record_static.mp3");
         this.recordRunningSound.loop = true;
-        this.recordRunningSound.volume = 0.16;
+        this.recordRunningSound.volume = 0.12;
         this.recordRemoveSound = new Audio("res/record_remove.mp3");
         this.recordRemoveSound.volume = 0.4;
         this.recordInsertSound = new Audio("res/record_insert.mp3");
@@ -211,7 +220,7 @@ class AudioAnimationController {
     setTextGlow(x) {
         document.querySelector("#container").style.setProperty(
             "--text-glow-blur",
-            `${AnimationSettings.TEXT_MAX_GLOW - 0.5 * (AnimationSettings.TEXT_MAX_GLOW-AnimationSettings.TEXT_MIN_GLOW) * Math.cos(2 * Math.PI * x)}px`
+            `${AnimationSettings.TEXT_MAX_GLOW - (AnimationSettings.TEXT_MAX_GLOW-AnimationSettings.TEXT_MIN_GLOW) * Math.cos(2 * Math.PI * x)}px`
         );
     }
 

@@ -263,6 +263,10 @@
     transform: translate(-50%, -7.12%);
 }
 
+#player {
+    display: none;
+}
+
 /* Info bar on right */
 
 #info {
