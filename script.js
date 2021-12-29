@@ -192,7 +192,7 @@ class AudioPlayer {
         window.addEventListener("resize", event => {
             this.controller.resize();
         });
-        window.requestAnimationFrame(this.animate.bind(this));
+        window.setTimeout(this.animate.bind(this), 16, Date.now());
     }
 
     async load(file) {
@@ -337,7 +337,7 @@ class AudioPlayer {
         }
         this.animator.update(time - this.animationFrame);
         this.animationFrame = time;
-        window.requestAnimationFrame(this.animate.bind(this));
+        window.setTimeout(this.animate.bind(this), 16, Date.now());
     }
 }
 
