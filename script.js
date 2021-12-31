@@ -8,7 +8,7 @@ class AudioLoader {
     }
 
     updateProgressBar(current, total) {
-        this.dropZone.querySelector(".progressbar .progressmarker").style.width = `${current / total * 100}%`
+        this.dropZone.querySelector(".progressbar .progressmarker").style.width = `${current / total * 100}%`;
     }
 
     async loadMetadata(file) {
